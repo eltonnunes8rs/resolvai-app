@@ -20,3 +20,12 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
 .tag{display:inline-block;padding:2px 8px;border-radius:99px;border:1px solid var(--bd);font-size:12px}
 .tag.bad{color:var(--bad)}.tag.warn{color:var(--warn)}
 .tabela{overflow-x:auto}
+
+a{color:var(--pri)}
+.acoes{margin-top:12px}.acoes .mini{margin-right:6px}
+.tempo{list-style:none;margin:0;padding:0}.tempo li{padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.tempo b{color:var(--mut);font-weight:600;margin-right:8px}
+.chat{display:flex;flex-direction:column;gap:8px}
+.bolha{max-width:85%;padding:8px 12px;border-radius:12px;border:1px solid var(--bd);font-size:14px;white-space:pre-wrap;word-break:break-word}
+.bolha small{display:block;color:var(--mut);font-size:11px;margin-bottom:2px}
+.bolha.cli{align-self:flex-start}.bolha.bot{align-self:flex-end;background:var(--bg)}
+td{vertical-align:top}

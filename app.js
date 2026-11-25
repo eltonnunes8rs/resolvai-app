@@ -78,7 +78,7 @@
         api({ acao: 'comando', token: s.token, cmd: cmd, pedido: id, texto: texto }).then(function (r) {
           if (!r.ok) { b.disabled = false; window.alert(r.erro || 'Não foi possível enviar.'); return; }
           window.alert(r.aviso || 'Comando enviado.');
-          setTimeout(function () { painelGerente(s); }, 2500);
+          setTimeout(function () { iniciar(); }, 2500);
         });
       };
     });
@@ -95,13 +95,13 @@
       $app.innerHTML = topo(s) + '<main>' +
         '<div class="card"><h2>Pedidos por situação</h2><div class="grid">' + kp + '</div></div>' +
         '<div class="card"><h2>Orçamentos para aprovar</h2>' + tabela([
-          ['Pedido', function (l) { return '#' + l.id; }], ['Cliente', function (l) { return esc(l.cliente); }],
+          ['Pedido', function (l) { return linkPedido(l.id); }], ['Cliente', function (l) { return esc(l.cliente); }],
           ['Serviço', function (l) { return esc(l.servico); }], ['Prestador', function (l) { return esc(l.prestador); }],
           ['Valor', function (l) { return brl(l.valor_orcado); }], ['Local', function (l) { return esc((l.bairro || '') + (l.cidade ? ' / ' + l.cidade : '')); }],
           ['Ações', function (l) { return btn('APROVAR', l.id, 'Aprovar') + ' ' + btn('RECUSAR', l.id, 'Recusar', 'sec') + ' ' + btn('TROCAR', l.id, 'Trocar prestador', 'sec'); }]
         ], r.aprovar) + '</div>' +
         '<div class="card"><h2>Pedidos recentes</h2>' + tabela([
-          ['Pedido', function (l) { return '#' + l.id; }], ['Cliente', function (l) { return esc(l.cliente); }],
+          ['Pedido', function (l) { return linkPedido(l.id); }], ['Cliente', function (l) { return esc(l.cliente); }],
           ['Serviço', function (l) { return esc(l.servico); }], ['Prestador', function (l) { return esc(l.prestador); }],
           ['Situação', function (l) { return '<span class="tag">' + esc(l.status || '-') + '</span>' + (l.pagamento_status ? ' <span class="tag warn">Pgto: ' + esc(l.pagamento_status) + '</span>' : ''); }],
           ['Valor', function (l) { return brl(l.valor_orcado); }], ['Agenda', function (l) { return dh(l.agenda_inicio); }],
@@ -114,7 +114,7 @@
           }]
         ], pedidos) + '</div>' +
         '<div class="card"><h2>Agenda dos próximos 7 dias</h2>' + tabela([
-          ['Quando', function (l) { return dh(l.inicio); }], ['Pedido', function (l) { return '#' + l.id; }],
+          ['Quando', function (l) { return dh(l.inicio); }], ['Pedido', function (l) { return linkPedido(l.id); }],
           ['Prestador', function (l) { return esc(l.prestador); }], ['Cliente', function (l) { return esc(l.cliente); }],
           ['Serviço', function (l) { return esc(l.servico); }], ['Situação', function (l) { return '<span class="tag">' + esc(l.status) + '</span>'; }]
         ], r.agenda) + '</div>' +
@@ -123,10 +123,51 @@
           ['Situação', function (l) { return l.ativo ? '<span class="tag">Ativo</span>' : '<span class="tag warn">Inativo</span>'; }]
         ], r.prestadores) + '</div>' +
         '<div class="card"><h2>Avaliações que pedem atenção</h2>' + tabela([
-          ['Pedido', function (l) { return '#' + l.id; }], ['Prestador', function (l) { return esc(l.prestador); }],
+          ['Pedido', function (l) { return linkPedido(l.id); }], ['Prestador', function (l) { return esc(l.prestador); }],
           ['Nota', function (l) { return '<span class="tag ' + (l.nota === 'PESSIMO' ? 'bad' : 'warn') + '">' + esc(l.nota) + '</span>'; }],
           ['Comentário', function (l) { return esc(l.comentario || '-'); }]
         ], r.avaliacoes_ruins) + '</div></main>';
+      document.getElementById('sair').onclick = sair;
+      ligarAcoes(s);
+    });
+  }
+
+  function linkPedido(id) { return '<a href="#pedido=' + id + '">#' + id + '</a>'; }
+
+  function painelPedido(s, id) {
+    $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
+    document.getElementById('sair').onclick = sair;
+    api({ acao: 'pedido', token: s.token, pedido: String(id) }).then(function (r) {
+      if (!r.ok) {
+        if (r.erro === 'Sessão inválida.') { gravarSessao(null); telaLogin('tel'); return; }
+        $app.innerHTML = topo(s) + '<main><p><a href="#">← Voltar</a></p><div class="card">' + esc(r.erro || 'Erro.') + '</div></main>';
+        document.getElementById('sair').onclick = sair; return;
+      }
+      var p = r.pedido, linhas = [
+        ['Cliente', p.cliente], ['Serviço', p.servico], ['Prestador', p.prestador], ['Endereço', p.endereco],
+        ['Terreno', p.tamanho], ['O cliente espera', p.expectativa],
+        ['Orçamento', p.valor_orcado != null ? brl(p.valor_orcado) + (p.duracao_min ? ' • ' + Math.round(p.duracao_min / 60 * 10) / 10 + ' h' : '') : null],
+        ['Obs. do orçamento', p.observacao_orcamento], ['Situação do orçamento', p.orcamento_status], ['Motivo da recusa', p.orcamento_motivo],
+        ['Agenda', p.agenda_inicio ? dh(p.agenda_inicio) : null], ['Pagamento', p.pagamento_status], ['Forma de pagamento', p.forma_pagamento],
+        ['Fotos', p.fotos ? p.fotos + (p.drive_url ? ' — <a href="' + esc(p.drive_url) + '" target="_blank" rel="noopener">abrir no Drive</a>' : '') : null]
+      ].filter(function (x) { return x[1] != null && x[1] !== ''; });
+      var acoes = [];
+      if (p.orcamento_status === 'AGUARDANDO_GERENTE') acoes.push(btn('APROVAR', p.id, 'Aprovar'), btn('RECUSAR', p.id, 'Recusar', 'sec'), btn('TROCAR', p.id, 'Trocar prestador', 'sec'));
+      if (p.pagamento_status && p.pagamento_status !== 'PAGO') acoes.push(btn('PAGO', p.id, 'Marcar pago'));
+      if (p.bot_pausado) acoes.push(btn('RETOMAR', p.id, 'Retomar bot', 'sec'));
+      if (p.status !== 'CANCELADO' && p.status !== 'CONCLUIDO') acoes.push(btn('CANCELAR', p.id, 'Cancelar', 'sec'));
+      var av = r.avaliacao ? '<div class="card"><h2>Avaliação</h2><p><span class="tag ' + (r.avaliacao.nota === 'PESSIMO' ? 'bad' : (r.avaliacao.nota === 'REGULAR' ? 'warn' : '')) + '">' + esc(r.avaliacao.nota) + '</span></p>' +
+        (r.avaliacao.comentario ? '<p>' + esc(r.avaliacao.comentario) + '</p>' : '<p class="vazio">Sem comentário.</p>') + '</div>' : '';
+      $app.innerHTML = topo(s) + '<main><p><a href="#">← Voltar</a></p>' +
+        '<div class="card"><h2>Pedido #' + p.id + ' <span class="tag">' + esc(p.status || '-') + '</span></h2>' +
+        '<table>' + linhas.map(function (x) { return '<tr><th>' + x[0] + '</th><td>' + (x[0] === 'Fotos' ? x[1] : esc(x[1])) + '</td></tr>'; }).join('') + '</table>' +
+        (acoes.length ? '<p class="acoes">' + acoes.join(' ') + '</p>' : '') + '</div>' +
+        av +
+        '<div class="card"><h2>Linha do tempo</h2>' + ((r.linha_do_tempo || []).length ? '<ul class="tempo">' + r.linha_do_tempo.map(function (e) { return '<li><b>' + dh(e.quando) + '</b> ' + esc(e.evento) + '</li>'; }).join('') + '</ul>' : '<p class="vazio">Sem eventos.</p>') + '</div>' +
+        '<div class="card"><h2>Conversa com o cliente</h2>' + ((r.conversa || []).length ? '<div class="chat">' + r.conversa.map(function (m) {
+          var saida = m.direcao === 'SAIDA';
+          return '<div class="bolha ' + (saida ? 'bot' : 'cli') + '"><small>' + (saida ? 'Bot' : esc(m.papel === 'CLIENTE' ? 'Cliente' : m.papel)) + (m.via_botao ? ' · botão' : '') + ' · ' + dh(m.quando) + '</small>' + esc(m.texto) + '</div>';
+        }).join('') + '</div>' : '<p class="vazio">Sem mensagens registradas.</p>') + '</div></main>';
       document.getElementById('sair').onclick = sair;
       ligarAcoes(s);
     });
@@ -146,7 +187,10 @@
   function iniciar() {
     var s = lerSessao();
     if (!s) return telaLogin('tel');
-    if (s.papel === 'GERENTE') painelGerente(s); else painelPrestador(s);
+    var m = /^#pedido=(\d+)$/.exec(location.hash || '');
+    if (s.papel === 'GERENTE') { if (m) painelPedido(s, m[1]); else painelGerente(s); }
+    else painelPrestador(s);
   }
+  window.addEventListener('hashchange', iniciar);
   iniciar();
 })();
