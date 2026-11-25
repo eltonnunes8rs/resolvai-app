@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.8.3
+- Botões secundários (Cancelar, Recusar, Trocar, Retomar bot, Editar, Sair) com contorno e texto verdes, bem visíveis.
+
 ## 0.8.2
 - Botões de ação alinhados em colunas iguais (detalhe do pedido e painel no celular).
 

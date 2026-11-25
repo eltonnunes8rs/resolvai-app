@@ -90,3 +90,8 @@ nav.menu a.on{color:var(--pri);border-bottom-color:var(--pri)}
   .tabela td.cel-acoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
   .tabela td.cel-acoes button.mini{width:100%;flex:none;padding:11px 12px}
 }
+
+/* botões secundários em verde: contorno e texto verdes, para não ficarem "escondidos" */
+button.sec{background:var(--card);color:var(--pri);border:1.5px solid var(--pri);font-weight:600}
+button.sec:hover{background:var(--pri);color:var(--pri-tx)}
+button.sec:disabled{opacity:.5}
