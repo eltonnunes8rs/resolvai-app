@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.8.2
+- Botões de ação alinhados em colunas iguais (detalhe do pedido e painel no celular).
+
 ## 0.8.1
 - Celular: as tabelas do painel viram blocos, com os botões de ação embaixo e lado a lado (sem rolagem lateral).
 
