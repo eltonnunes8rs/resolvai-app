@@ -219,10 +219,10 @@
 
   function fotosCard(p) {
     var l = p.fotos_lista || [];
-    if (!l.length && !p.drive_url) return '';
+    if (!l.length) return '';
     return '<div class="card"><h2>Fotos' + (l.length ? ' (' + l.length + ')' : '') + '</h2>' +
       (l.length ? '<div class="grade-fotos">' + l.map(function () { return '<button class="miniatura" type="button" aria-label="Ampliar foto"></button>'; }).join('') + '</div>' : '<p class="vazio">Nenhuma foto registrada.</p>') +
-      (p.drive_url ? '<p><a href="' + esc(p.drive_url) + '" target="_blank" rel="noopener">Abrir pasta no Drive</a></p>' : '') + '</div>';
+'</div>';
   }
 
   function painelPrestador(s) {

@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.5.1
+- Removido o link da pasta do Drive no detalhe do pedido (ficam só as miniaturas).
+
 ## 0.5.0
 - App instalável (PWA): banner de instalação, ícone na tela, funciona sem internet na casca e aviso de versão nova no topo.
 
