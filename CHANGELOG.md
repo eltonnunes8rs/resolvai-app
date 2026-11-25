@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.8.4
+- Avisos compactos: nova versão vira faixa fina no topo e instalar vira cartão pequeno no canto.
+
 ## 0.8.3
 - Botões secundários (Cancelar, Recusar, Trocar, Retomar bot, Editar, Sair) com contorno e texto verdes, bem visíveis.
 

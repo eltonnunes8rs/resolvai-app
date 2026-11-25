@@ -23,9 +23,9 @@
     avisouVersao = nova;
     var d = document.getElementById('aviso-versao');
     if (!d) { d = document.createElement('div'); d.id = 'aviso-versao'; topo.appendChild(d); }
-    d.innerHTML = '<span>🔄 Tem versão nova do app (v' + nova + ').</span> <button type="button" id="atualizar">Atualizar agora</button>';
+    d.innerHTML = '<span>🔄 Nova versão (v' + nova + ')</span><button type="button" id="atualizar">Atualizar</button>';
     document.getElementById('atualizar').onclick = function () {
-      this.disabled = true; this.textContent = 'Atualizando…';
+      this.disabled = true; this.textContent = '…';
       var fim = function () { location.reload(); };
       var limpar = window.caches ? caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }) : Promise.resolve();
       limpar.then(function () {
@@ -50,12 +50,10 @@
     if (!evento && !ios) return;
     var d = document.createElement('div');
     d.id = 'aviso-instalar'; d.className = 'card';
-    d.innerHTML = '<h2>📲 Instale o app</h2><p class="vazio">Fica na tela do seu celular, sem precisar procurar o link.</p>' +
-      (evento
-        ? '<button type="button" id="instalar">Instalar o app</button>'
-        : '<p>No iPhone: toque em <b>Compartilhar</b> (o quadrado com a seta) e depois em <b>Adicionar à Tela de Início</b>.</p>') +
-      '<p><a href="#" id="agora-nao">Agora não</a></p>';
-    topo.appendChild(d);
+    d.innerHTML = '<b>📲 Instale o app</b><span class="vazio">Fica na tela do celular, sem procurar o link.</span>' +
+      (evento ? '' : '<span>No iPhone: toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</span>') +
+      '<div class="bt">' + (evento ? '<button type="button" id="instalar">Instalar</button>' : '') + '<a href="#" id="agora-nao">Agora não</a></div>';
+    document.body.appendChild(d);
     document.getElementById('agora-nao').onclick = function (e) {
       e.preventDefault(); guardar('resolvai_instalar_ate', String(Date.now() + 7 * 24 * 3600 * 1000)); d.remove();
     };

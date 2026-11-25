@@ -95,3 +95,12 @@ nav.menu a.on{color:var(--pri);border-bottom-color:var(--pri)}
 button.sec{background:var(--card);color:var(--pri);border:1.5px solid var(--pri);font-weight:600}
 button.sec:hover{background:var(--pri);color:var(--pri-tx)}
 button.sec:disabled{opacity:.5}
+
+/* avisos compactos: versão nova = faixa fina no topo; instalar = cartão pequeno no canto */
+#aviso-versao{display:flex;flex-wrap:nowrap;justify-content:center;align-items:center;gap:10px;padding:5px 12px;font-size:13px;line-height:1.2}
+#aviso-versao button{width:auto;margin:0;padding:3px 12px;font-size:12.5px;border-radius:999px}
+#aviso-instalar{position:fixed;right:16px;bottom:16px;z-index:45;margin:0;width:min(320px,calc(100vw - 32px));padding:12px 14px;display:flex;flex-direction:column;gap:4px;box-shadow:0 10px 30px -8px rgba(0,0,0,.3);font-size:14px}
+#aviso-instalar .vazio{font-size:13px}
+#aviso-instalar .bt{display:flex;align-items:center;gap:14px;margin-top:6px}
+#aviso-instalar button{width:auto;margin:0;padding:7px 18px;border-radius:999px;font-size:14px}
+#aviso-instalar a{font-size:13px}
