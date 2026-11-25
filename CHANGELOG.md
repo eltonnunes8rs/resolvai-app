@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.9.2
+- Logo oficial atualizada (com a casa)
+
 ## 0.9.1
 - Logo atualizada (pá no lugar da folha)
 
