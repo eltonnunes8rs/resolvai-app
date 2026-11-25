@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.8.6
+- Títulos dos blocos em faixa verde com letras maiúsculas
+
 ## 0.8.5
 - Computador: botões de ação da tabela em uma linha, coluna Ações ajustada ao tamanho dos botões.
 
