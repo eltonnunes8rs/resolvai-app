@@ -48,3 +48,11 @@ header h1{display:flex;align-items:center;gap:8px}
 .logo-grande{width:84px;height:84px;display:block;margin:0 auto 8px;border-radius:20px}
 .login h2{text-align:center}
 footer.versao{text-align:center;color:var(--mut);font-size:12px;padding:16px}
+
+#avisos-topo{position:sticky;top:0;z-index:40}
+#aviso-versao{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:10px 16px;background:var(--pri);color:var(--pri-tx);font-size:14px}
+#aviso-versao button{background:var(--pri-tx);color:var(--pri);padding:6px 12px;border-radius:8px}
+#aviso-instalar{margin:12px 16px}
+#aviso-instalar h2{margin:0 0 4px;font-size:17px}
+#aviso-instalar button{width:100%;padding:14px;border-radius:12px;font-size:16px}
+header{top:0}

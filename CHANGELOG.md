@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.5.0
+- App instalável (PWA): banner de instalação, ícone na tela, funciona sem internet na casca e aviso de versão nova no topo.
+
 Formato: MAIOR.MENOR.AJUSTE. A versão fica em `config.js` (`RESOLVAI_VERSAO`) e nas URLs de `index.html` (`?v=`). Ao publicar: subir os três juntos, atualizar este arquivo e criar a tag git `vX.Y.Z`.
 
 ## 0.4.0
