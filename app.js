@@ -21,7 +21,7 @@
   // ---------- Login ----------
   function telaLogin(etapa, tel) {
     $app.innerHTML =
-      '<div class="login card"><img src="logo.svg" alt="ResolvAÍ" class="logo-grande"><h2>ResolvAÍ</h2>' +
+      '<div class="login card"><img src="simbolo.png" alt="ResolvAÍ" class="logo-grande"><h2>ResolvAÍ</h2>' +
       (etapa === 'codigo'
         ? '<p class="vazio">Enviamos um código de 6 dígitos para o seu WhatsApp.</p>' +
           '<input id="cod" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Código">' +
@@ -56,7 +56,7 @@
   // ---------- Painel do gerente ----------
   function topo(s) {
     var nav = s.papel === 'GERENTE' ? '<nav class="menu"><a href="#" class="' + (/^#(equipe)?$/.test(location.hash || '') && location.hash !== '#equipe' ? 'on' : '') + '">Painel</a><a href="#equipe" class="' + (location.hash === '#equipe' ? 'on' : '') + '">Equipe</a></nav>' : '';
-    return '<header><h1><img src="logo.svg" alt="" class="logo-mini">ResolvAÍ</h1><div>' + esc(s.nome || '') + ' <button id="sair" class="sec mini">Sair</button></div></header>' + nav;
+    return '<header><h1><img src="simbolo.png" alt="" class="logo-mini">ResolvAÍ</h1><div>' + esc(s.nome || '') + ' <button id="sair" class="sec mini">Sair</button></div></header>' + nav;
   }
   function tabela(cols, linhas) {
     if (!linhas || !linhas.length) return '<p class="vazio">Nada por aqui.</p>';

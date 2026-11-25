@@ -46,8 +46,8 @@ td{vertical-align:top}
 #caixa-foto .vazio{color:#ddd}
 
 header h1{display:flex;align-items:center;gap:8px}
-.logo-mini{width:28px;height:28px;border-radius:7px}
-.logo-grande{width:84px;height:84px;display:block;margin:0 auto 8px;border-radius:20px}
+.logo-mini{width:32px;height:32px;object-fit:contain}
+.logo-grande{width:120px;height:120px;object-fit:contain;display:block;margin:0 auto 8px}
 .login h2{text-align:center}
 footer.versao{text-align:center;color:var(--mut);font-size:12px;padding:16px}
 
@@ -114,3 +114,4 @@ button.sec:disabled{opacity:.5}
   .tabela td.cel-acoes button.mini:first-child{margin-left:0}
   .tabela th:last-child{text-align:right}
 }
+.login.card>h2{background:none;color:var(--pri);text-transform:none;letter-spacing:0;font-size:22px;margin:0 0 12px;padding:0}

@@ -2,7 +2,7 @@
 // Rede primeiro: sempre tenta a versão nova; usa o cache só se estiver sem conexão.
 // A API (n8n) e version.json nunca passam pelo cache.
 var CACHE = 'resolvai-casca';
-var CASCA = ['./', 'index.html', 'style.css', 'app.js', 'pwa.js', 'config.js', 'logo.svg', 'icone-192.png', 'icone-512.png', 'manifest.webmanifest'];
+var CASCA = ['./', 'index.html', 'style.css', 'app.js', 'pwa.js', 'config.js', 'simbolo.png', 'icone-192.png', 'icone-512.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(CASCA); }).then(function () { return self.skipWaiting(); }));

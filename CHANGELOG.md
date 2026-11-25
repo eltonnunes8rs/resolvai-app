@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.9.0
+- Nova logo (símbolo) no app: cabeçalho, login, ícone de instalação e favicon
+
 ## 0.8.6
 - Títulos dos blocos em faixa verde com letras maiúsculas
 
