@@ -61,6 +61,29 @@
     return '<div class="tabela"><table><tr>' + cols.map(function (c) { return '<th>' + c[0] + '</th>'; }).join('') + '</tr>' +
       linhas.map(function (l) { return '<tr>' + cols.map(function (c) { return '<td>' + c[1](l) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table></div>';
   }
+  function btn(cmd, id, rotulo, cls) {
+    return '<button class="mini ' + (cls || '') + '" data-cmd="' + cmd + '" data-id="' + id + '">' + rotulo + '</button>';
+  }
+  var ROTULO = { APROVAR: 'Aprovar o orçamento', RECUSAR: 'Recusar o orçamento', TROCAR: 'Trocar de prestador', PAGO: 'Marcar como pago', CANCELAR: 'Cancelar o pedido', RETOMAR: 'Retomar o bot' };
+  function ligarAcoes(s) {
+    $app.querySelectorAll('button[data-cmd]').forEach(function (b) {
+      b.onclick = function () {
+        var cmd = b.getAttribute('data-cmd'), id = b.getAttribute('data-id'), texto = '';
+        if (cmd === 'RECUSAR') {
+          var m = window.prompt('Motivo da recusa (o prestador recebe e refaz o orçamento):', '');
+          if (m === null) return;
+          texto = m;
+        } else if (!window.confirm((ROTULO[cmd] || cmd) + ' — pedido #' + id + '?')) return;
+        b.disabled = true;
+        api({ acao: 'comando', token: s.token, cmd: cmd, pedido: id, texto: texto }).then(function (r) {
+          if (!r.ok) { b.disabled = false; window.alert(r.erro || 'Não foi possível enviar.'); return; }
+          window.alert(r.aviso || 'Comando enviado.');
+          setTimeout(function () { painelGerente(s); }, 2500);
+        });
+      };
+    });
+  }
+
   function painelGerente(s) {
     $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
     document.getElementById('sair').onclick = sair;
@@ -72,8 +95,22 @@
         '<div class="card"><h2>Orçamentos para aprovar</h2>' + tabela([
           ['Pedido', function (l) { return '#' + l.id; }], ['Cliente', function (l) { return esc(l.cliente); }],
           ['Serviço', function (l) { return esc(l.servico); }], ['Prestador', function (l) { return esc(l.prestador); }],
-          ['Valor', function (l) { return brl(l.valor_orcado); }], ['Local', function (l) { return esc((l.bairro || '') + (l.cidade ? ' / ' + l.cidade : '')); }]
-        ], r.aprovar) + '<p class="vazio">Aprovar, recusar e trocar prestador pelo app chegam na próxima etapa. Por enquanto, use os botões no WhatsApp.</p></div>' +
+          ['Valor', function (l) { return brl(l.valor_orcado); }], ['Local', function (l) { return esc((l.bairro || '') + (l.cidade ? ' / ' + l.cidade : '')); }],
+          ['Ações', function (l) { return btn('APROVAR', l.id, 'Aprovar') + ' ' + btn('RECUSAR', l.id, 'Recusar', 'sec') + ' ' + btn('TROCAR', l.id, 'Trocar prestador', 'sec'); }]
+        ], r.aprovar) + '</div>' +
+        '<div class="card"><h2>Pedidos recentes</h2>' + tabela([
+          ['Pedido', function (l) { return '#' + l.id; }], ['Cliente', function (l) { return esc(l.cliente); }],
+          ['Serviço', function (l) { return esc(l.servico); }], ['Prestador', function (l) { return esc(l.prestador); }],
+          ['Situação', function (l) { return '<span class="tag">' + esc(l.status || '-') + '</span>' + (l.pagamento_status ? ' <span class="tag warn">Pgto: ' + esc(l.pagamento_status) + '</span>' : ''); }],
+          ['Valor', function (l) { return brl(l.valor_orcado); }], ['Agenda', function (l) { return dh(l.agenda_inicio); }],
+          ['Ações', function (l) {
+            var a = [];
+            if (l.pagamento_status && l.pagamento_status !== 'PAGO') a.push(btn('PAGO', l.id, 'Marcar pago'));
+            if (l.bot_pausado) a.push(btn('RETOMAR', l.id, 'Retomar bot', 'sec'));
+            if (l.status !== 'CANCELADO' && l.status !== 'CONCLUIDO') a.push(btn('CANCELAR', l.id, 'Cancelar', 'sec'));
+            return a.join(' ') || '-';
+          }]
+        ], r.pedidos) + '</div>' +
         '<div class="card"><h2>Agenda dos próximos 7 dias</h2>' + tabela([
           ['Quando', function (l) { return dh(l.inicio); }], ['Pedido', function (l) { return '#' + l.id; }],
           ['Prestador', function (l) { return esc(l.prestador); }], ['Cliente', function (l) { return esc(l.cliente); }],
@@ -89,6 +126,7 @@
           ['Comentário', function (l) { return esc(l.comentario || '-'); }]
         ], r.avaliacoes_ruins) + '</div></main>';
       document.getElementById('sair').onclick = sair;
+      ligarAcoes(s);
     });
   }
 
