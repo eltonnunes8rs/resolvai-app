@@ -20,7 +20,7 @@
   // ---------- Login ----------
   function telaLogin(etapa, tel) {
     $app.innerHTML =
-      '<div class="login card"><h2>ResolvAÍ</h2>' +
+      '<div class="login card"><img src="logo.svg" alt="ResolvAÍ" class="logo-grande"><h2>ResolvAÍ</h2>' +
       (etapa === 'codigo'
         ? '<p class="vazio">Enviamos um código de 6 dígitos para o seu WhatsApp.</p>' +
           '<input id="cod" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="Código">' +
@@ -54,7 +54,7 @@
 
   // ---------- Painel do gerente ----------
   function topo(s) {
-    return '<header><h1>ResolvAÍ</h1><div>' + esc(s.nome || '') + ' <button id="sair" class="sec mini">Sair</button></div></header>';
+    return '<header><h1><img src="logo.svg" alt="" class="logo-mini">ResolvAÍ</h1><div>' + esc(s.nome || '') + ' <button id="sair" class="sec mini">Sair</button></div></header>';
   }
   function tabela(cols, linhas) {
     if (!linhas || !linhas.length) return '<p class="vazio">Nada por aqui.</p>';
@@ -244,5 +244,6 @@
     else painelPrestador(s);
   }
   window.addEventListener('hashchange', iniciar);
+  var rod = document.createElement('footer'); rod.className = 'versao'; rod.textContent = 'ResolvAÍ v' + (window.RESOLVAI_VERSAO || '?'); document.body.appendChild(rod);
   iniciar();
 })();

@@ -42,3 +42,9 @@ td{vertical-align:top}
 #caixa-foto button{position:absolute;background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:999px;width:44px;height:44px;font-size:24px;cursor:pointer}
 .cx-x{top:12px;right:12px}.cx-p{left:12px;top:50%}.cx-n{right:12px;top:50%}
 #caixa-foto .vazio{color:#ddd}
+
+header h1{display:flex;align-items:center;gap:8px}
+.logo-mini{width:28px;height:28px;border-radius:7px}
+.logo-grande{width:84px;height:84px;display:block;margin:0 auto 8px;border-radius:20px}
+.login h2{text-align:center}
+footer.versao{text-align:center;color:var(--mut);font-size:12px;padding:16px}
