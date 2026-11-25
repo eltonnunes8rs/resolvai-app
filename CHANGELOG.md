@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.6.0
+- App do prestador: lista por situação, agenda de 15 dias, detalhe com fotos e mapa, aceitar, recusar (volta ao gerente), enviar orçamento, iniciar e finalizar serviço.
+
 ## 0.5.1
 - Removido o link da pasta do Drive no detalhe do pedido (ficam só as miniaturas).
 

@@ -225,9 +225,119 @@
 '</div>';
   }
 
+  // ---------- Prestador ----------
+  var FASE_ROT = { NOVO: 'Novo pedido', REFAZER: 'Refazer orçamento', AGUARDANDO_GERENTE: 'Aguardando o gerente', AGUARDANDO_CLIENTE: 'Aguardando o cliente',
+    AGENDADO: 'Agendado', EM_ANDAMENTO: 'Em andamento', RECUSADO: 'Devolvido ao gerente', CONCLUIDO: 'Concluído' };
+  var SECOES = [
+    ['Precisam de você', ['NOVO', 'REFAZER']], ['Em andamento', ['EM_ANDAMENTO']], ['Agendados', ['AGENDADO']],
+    ['Aguardando aprovação', ['AGUARDANDO_GERENTE', 'AGUARDANDO_CLIENTE']], ['Devolvidos ao gerente', ['RECUSADO']], ['Concluídos', ['CONCLUIDO']]
+  ];
+
+  function ligarFotos(s, lista) {
+    Array.prototype.forEach.call(document.querySelectorAll('.miniatura'), function (el, k) {
+      carregarFoto(s, lista[k].id).then(function (u) { el.style.backgroundImage = 'url(' + u + ')'; el.classList.add('ok'); }).catch(function () { el.textContent = '⚠'; });
+      el.onclick = function () { abrirCaixa(s, lista, k); };
+    });
+  }
+  function dia(v) { var d = new Date(v); return d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' }); }
+  function hora(v) { var d = new Date(v); return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
+  function sessaoExpirou(r, s) { if (!r.ok && r.erro === 'Sessão inválida.') { gravarSessao(null); telaLogin('tel'); return true; } return false; }
+
   function painelPrestador(s) {
-    $app.innerHTML = topo(s) + '<main><div class="card"><h2>Olá, ' + esc(s.nome || '') + '</h2><p class="vazio">A agenda e os serviços do prestador chegam na próxima etapa.</p></div></main>';
+    $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
     document.getElementById('sair').onclick = sair;
+    api({ acao: 'prestador_resumo', token: s.token }).then(function (r) {
+      if (sessaoExpirou(r, s)) return;
+      if (!r.ok) { $app.innerHTML = topo(s) + '<main><div class="card">' + esc(r.erro || 'Erro.') + '</div></main>'; document.getElementById('sair').onclick = sair; return; }
+      var ped = r.pedidos || [], html = '<main>';
+      var secs = SECOES.map(function (sc) {
+        var l = ped.filter(function (p) { return sc[1].indexOf(p.fase) >= 0; });
+        if (!l.length) return '';
+        return '<div class="card"><h2>' + sc[0] + ' (' + l.length + ')</h2>' + l.map(function (p) {
+          return '<a class="item-pedido" href="#pedido=' + p.id + '"><b>#' + p.id + '</b> ' + esc(p.servico || 'Serviço') + ' — ' + esc(p.cliente || '') +
+            '<small>' + esc(p.local || '') + (p.agenda_inicio ? ' · ' + dh(p.agenda_inicio) : '') + (p.valor_orcado != null ? ' · ' + brl(p.valor_orcado) : '') +
+            ' · <span class="tag ' + (p.fase === 'NOVO' || p.fase === 'REFAZER' ? 'warn' : '') + '">' + esc(FASE_ROT[p.fase] || p.fase) + '</span></small></a>';
+        }).join('') + '</div>';
+      }).join('');
+      var ag = r.agenda || [], porDia = {}, ordem = [];
+      ag.forEach(function (x) { var k = dia(x.inicio); if (!porDia[k]) { porDia[k] = []; ordem.push(k); } porDia[k].push(x); });
+      var agHtml = '<div class="card"><h2>Minha agenda (15 dias)</h2>' + (ordem.length ? ordem.map(function (k) {
+        return '<h3 class="dia">' + esc(k) + '</h3>' + porDia[k].map(function (x) {
+          return '<a class="item-pedido" href="#pedido=' + x.id + '"><b>' + hora(x.inicio) + (x.fim ? '–' + hora(x.fim) : '') + '</b> ' + esc(x.servico || 'Serviço') + ' — ' + esc(x.cliente || '') + '<small>#' + x.id + ' · ' + esc(x.local || '') + '</small></a>';
+        }).join('');
+      }).join('') : '<p class="vazio">Nada agendado.</p>') + '</div>';
+      $app.innerHTML = topo(s) + '<main>' + (secs || '<div class="card"><p class="vazio">Nenhum pedido no momento.</p></div>') + agHtml + '</main>';
+      document.getElementById('sair').onclick = sair;
+    });
+  }
+
+  function painelPedidoPrest(s, id) {
+    $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
+    document.getElementById('sair').onclick = sair;
+    api({ acao: 'prestador_pedido', token: s.token, pedido: String(id) }).then(function (r) {
+      if (sessaoExpirou(r, s)) return;
+      if (!r.ok) { $app.innerHTML = topo(s) + '<main><p><a href="#">← Voltar</a></p><div class="card">' + esc(r.erro || 'Erro.') + '</div></main>'; document.getElementById('sair').onclick = sair; return; }
+      var p = r.pedido, ac = p.acoes || [];
+      var linhas = [['Serviço', p.servico], ['Cliente', p.cliente], ['Endereço', p.endereco], ['Terreno', p.tamanho], ['O cliente espera', p.expectativa],
+        ['Orçamento', p.valor_orcado != null ? brl(p.valor_orcado) + (p.duracao_min ? ' • ' + Math.round(p.duracao_min / 60 * 10) / 10 + ' h' : '') : null],
+        ['Obs. do orçamento', p.observacao_orcamento], ['Agenda', p.agenda_inicio ? dh(p.agenda_inicio) : null],
+        ['Pagamento', p.agenda_inicio ? (p.pago ? 'Confirmado' : 'Aguardando o cliente') : null]
+      ].filter(function (x) { return x[1] != null && x[1] !== ''; });
+      var botoes = '';
+      if (ac.indexOf('ACEITAR') >= 0) botoes += '<button class="mini" data-pa="ACEITAR">Aceitar</button> ';
+      if (ac.indexOf('ORCAR') >= 0) botoes += '<button class="mini" id="abrir-orc">Enviar orçamento</button> ';
+      if (ac.indexOf('RECUSAR') >= 0) botoes += '<button class="mini sec" data-pa="RECUSAR">Recusar</button> ';
+      if (ac.indexOf('INICIAR') >= 0) botoes += '<button class="mini" data-pa="INICIAR">Iniciar serviço</button> ';
+      if (ac.indexOf('FINALIZAR') >= 0) botoes += '<button class="mini" data-pa="FINALIZAR">Finalizar serviço</button> ';
+      var aviso = p.fase === 'REFAZER' ? '<p class="alerta">O gerente pediu para refazer o orçamento' + (p.motivo_refazer ? ': ' + esc(p.motivo_refazer) : '.') + '</p>' : '';
+      var nota = ac.indexOf('FINALIZAR') >= 0 ? '<p class="vazio">Antes de finalizar, envie as fotos do resultado pelo WhatsApp: elas seguem para o cliente junto com a avaliação.</p>' : '';
+      var form = ac.indexOf('ORCAR') >= 0 ?
+        '<form id="form-orc" class="card" hidden><h2>Orçamento</h2>' +
+        '<label>Valor (R$)<input id="orc-valor" inputmode="decimal" placeholder="350,00" required></label>' +
+        '<label>Horas de serviço<input id="orc-horas" inputmode="decimal" placeholder="2 ou 2,5" required></label>' +
+        '<label>Observação (opcional)<input id="orc-obs" maxlength="200" placeholder="Ex.: inclui descarte do material"></label>' +
+        '<button type="submit">Enviar ao gerente</button> <button type="button" class="sec" id="cancelar-orc">Cancelar</button></form>' : '';
+      $app.innerHTML = topo(s) + '<main><p><a href="#">← Voltar</a></p>' + aviso +
+        '<div class="card"><h2>Pedido #' + p.id + ' <span class="tag">' + esc(FASE_ROT[p.fase] || p.fase) + '</span></h2>' +
+        '<table>' + linhas.map(function (x) { return '<tr><th>' + x[0] + '</th><td>' + esc(x[1]) + '</td></tr>'; }).join('') + '</table>' +
+        (p.mapa ? '<p><a href="' + esc(p.mapa) + '" target="_blank" rel="noopener">📍 Abrir no mapa</a></p>' : '') +
+        (botoes ? '<p class="acoes">' + botoes + '</p>' : '') + nota + '</div>' + form + fotosCard(p) + '</main>';
+      document.getElementById('sair').onclick = sair;
+      ligarFotos(s, p.fotos_lista || []);
+
+      function enviar(acao, extra, btnEl, depoisMs) {
+        if (btnEl) btnEl.disabled = true;
+        var corpo = { acao: 'prestador_acao', token: s.token, acao_pedido: acao, pedido: String(p.id) };
+        Object.keys(extra || {}).forEach(function (k) { corpo[k] = extra[k]; });
+        api(corpo).then(function (x) {
+          if (!x.ok) { if (btnEl) btnEl.disabled = false; window.alert(x.erro || 'Não foi possível enviar.'); return; }
+          window.alert(x.aviso || 'Pronto.');
+          if (acao === 'RECUSAR') { location.hash = ''; setTimeout(iniciar, 50); } else setTimeout(iniciar, depoisMs);
+        });
+      }
+      Array.prototype.forEach.call(document.querySelectorAll('button[data-pa]'), function (b) {
+        b.onclick = function () {
+          var a = b.getAttribute('data-pa');
+          if (a === 'RECUSAR') {
+            var m = window.prompt('Por que você está recusando? (o gerente recebe e escolhe outro prestador)', '');
+            if (m === null) return;
+            enviar('RECUSAR', { texto: m }, b, 0);
+          } else if (a === 'ACEITAR') enviar('ACEITAR', {}, b, 0);
+          else if (window.confirm((a === 'INICIAR' ? 'Iniciar o serviço' : 'Finalizar o serviço') + ' do pedido #' + p.id + '?')) enviar(a, {}, b, 2500);
+        };
+      });
+      var ab = document.getElementById('abrir-orc');
+      if (ab) {
+        ab.onclick = function () { document.getElementById('form-orc').hidden = false; document.getElementById('orc-valor').focus(); };
+        document.getElementById('cancelar-orc').onclick = function () { document.getElementById('form-orc').hidden = true; };
+        document.getElementById('form-orc').onsubmit = function (e) {
+          e.preventDefault();
+          var v = document.getElementById('orc-valor').value, h = document.getElementById('orc-horas').value;
+          if (!window.confirm('Enviar orçamento de R$ ' + v + ' para ' + h + ' h de serviço?')) return;
+          enviar('ORCAR', { valor: v, horas: h, texto: document.getElementById('orc-obs').value }, e.target.querySelector('button[type=submit]'), 2500);
+        };
+      }
+    });
   }
 
   function sair() {
@@ -241,7 +351,7 @@
     if (!s) return telaLogin('tel');
     var m = /^#pedido=(\d+)$/.exec(location.hash || '');
     if (s.papel === 'GERENTE') { if (m) painelPedido(s, m[1]); else painelGerente(s); }
-    else painelPrestador(s);
+    else { if (m) painelPedidoPrest(s, m[1]); else painelPrestador(s); }
   }
   window.addEventListener('hashchange', iniciar);
   var rod = document.createElement('footer'); rod.className = 'versao'; rod.textContent = 'ResolvAÍ v' + (window.RESOLVAI_VERSAO || '?'); document.body.appendChild(rod);
