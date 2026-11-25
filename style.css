@@ -65,3 +65,7 @@ h3.dia{margin:12px 0 2px;font-size:14px;text-transform:capitalize;color:var(--mu
 form.card label{display:block;margin-bottom:10px;font-size:14px;color:var(--mut)}
 form.card input{display:block;width:100%;margin-top:4px}
 [hidden]{display:none!important}
+
+nav.menu{display:flex;gap:4px;padding:8px 16px 0;background:var(--card);border-bottom:1px solid var(--bd)}
+nav.menu a{padding:8px 14px;text-decoration:none;color:var(--mut);border-bottom:3px solid transparent;font-weight:600}
+nav.menu a.on{color:var(--pri);border-bottom-color:var(--pri)}

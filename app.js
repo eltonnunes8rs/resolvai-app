@@ -55,7 +55,8 @@
 
   // ---------- Painel do gerente ----------
   function topo(s) {
-    return '<header><h1><img src="logo.svg" alt="" class="logo-mini">ResolvAÍ</h1><div>' + esc(s.nome || '') + ' <button id="sair" class="sec mini">Sair</button></div></header>';
+    var nav = s.papel === 'GERENTE' ? '<nav class="menu"><a href="#" class="' + (/^#(equipe)?$/.test(location.hash || '') && location.hash !== '#equipe' ? 'on' : '') + '">Painel</a><a href="#equipe" class="' + (location.hash === '#equipe' ? 'on' : '') + '">Equipe</a></nav>' : '';
+    return '<header><h1><img src="logo.svg" alt="" class="logo-mini">ResolvAÍ</h1><div>' + esc(s.nome || '') + ' <button id="sair" class="sec mini">Sair</button></div></header>' + nav;
   }
   function tabela(cols, linhas) {
     if (!linhas || !linhas.length) return '<p class="vazio">Nada por aqui.</p>';
@@ -344,6 +345,75 @@
     });
   }
 
+  // ---------- Equipe (gerente) ----------
+  function fmtTel(v) {
+    var d = String(v || '').replace(/\D/g, '');
+    if (d.length > 13) return 'Grupo do WhatsApp';
+    if (d.indexOf('55') === 0) d = d.slice(2);
+    if (d.length === 10) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
+    if (d.length === 11) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
+    return v || '';
+  }
+  function painelEquipe(s) {
+    var calado = quieto; if (!calado) $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
+    document.getElementById('sair').onclick = sair;
+    api({ acao: 'equipe', token: s.token }).then(function (r) {
+      if (sessaoExpirou(r, s)) return;
+      if (!r.ok) { if (calado) return; $app.innerHTML = topo(s) + '<main><div class="card">' + esc(r.erro || 'Erro.') + '</div></main>'; document.getElementById('sair').onclick = sair; return; }
+      function linha(tipo, x) {
+        var tags = (x.ativo ? '<span class="tag">Ativo</span>' : '<span class="tag bad">Inativo</span>') + (x.principal ? ' <span class="tag">Principal</span>' : '') + (x.eu ? ' <span class="tag">Você</span>' : '') +
+          (tipo === 'PRESTADOR' && x.abertos ? ' <span class="tag warn">' + x.abertos + ' em aberto</span>' : '');
+        return '<div class="item-pedido"><b>' + esc(x.nome) + '</b> ' + tags + '<small>' + esc(fmtTel(x.telefone)) + '</small>' +
+          '<p class="acoes"><button class="mini sec" data-ed="' + tipo + ':' + x.id + '">Editar</button> ' +
+          '<button class="mini sec" data-at="' + tipo + ':' + x.id + ':' + (x.ativo ? '0' : '1') + '">' + (x.ativo ? 'Desativar' : 'Reativar') + '</button></p></div>';
+      }
+      var dados = {};
+      (r.gerentes || []).forEach(function (x) { dados['GERENTE:' + x.id] = x; });
+      (r.prestadores || []).forEach(function (x) { dados['PRESTADOR:' + x.id] = x; });
+      $app.innerHTML = topo(s) + '<main>' +
+        '<form id="form-equipe" class="card" hidden><h2 id="fe-titulo">Cadastrar</h2>' +
+        '<label>Nome<input id="fe-nome" maxlength="60" required></label>' +
+        '<label>WhatsApp com DDD<input id="fe-tel" inputmode="tel" placeholder="(46) 99999-9999" required></label>' +
+        '<button type="submit">Salvar</button> <button type="button" class="sec" id="fe-cancelar">Cancelar</button></form>' +
+        '<div class="card"><h2>Prestadores</h2>' + ((r.prestadores || []).map(function (x) { return linha('PRESTADOR', x); }).join('') || '<p class="vazio">Nenhum prestador.</p>') +
+        '<p><button class="mini" data-novo="PRESTADOR">+ Novo prestador</button></p></div>' +
+        '<div class="card"><h2>Gerentes</h2>' + ((r.gerentes || []).map(function (x) { return linha('GERENTE', x); }).join('') || '<p class="vazio">Nenhum gerente.</p>') +
+        '<p><button class="mini" data-novo="GERENTE">+ Novo gerente</button></p></div></main>';
+      document.getElementById('sair').onclick = sair;
+      var form = document.getElementById('form-equipe'), alvo = null;
+      function abrir(tipo, x) {
+        alvo = { tipo: tipo, id: x ? x.id : '', ativo: x ? x.ativo : true };
+        document.getElementById('fe-titulo').textContent = (x ? 'Editar ' : 'Novo ') + (tipo === 'GERENTE' ? 'gerente' : 'prestador');
+        document.getElementById('fe-nome').value = x ? x.nome : '';
+        document.getElementById('fe-tel').value = x ? fmtTel(x.telefone) : '';
+        form.hidden = false; window.scrollTo(0, 0); document.getElementById('fe-nome').focus();
+      }
+      function salvar(a, botao) {
+        if (botao) botao.disabled = true;
+        api({ acao: 'equipe_salvar', token: s.token, tipo: a.tipo, id: String(a.id || ''), nome: a.nome, telefone: a.telefone, ativo: a.ativo ? 'true' : 'false' }).then(function (x) {
+          if (botao) botao.disabled = false;
+          if (!x.ok) { window.alert(x.erro || 'Não foi possível salvar.'); return; }
+          window.alert(x.aviso || 'Salvo.'); painelEquipe(s);
+        });
+      }
+      Array.prototype.forEach.call(document.querySelectorAll('[data-novo]'), function (b) { b.onclick = function () { abrir(b.getAttribute('data-novo'), null); }; });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-ed]'), function (b) { b.onclick = function () { abrir(b.getAttribute('data-ed').split(':')[0], dados[b.getAttribute('data-ed')]); }; });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-at]'), function (b) {
+        b.onclick = function () {
+          var p = b.getAttribute('data-at').split(':'), x = dados[p[0] + ':' + p[1]], ativar = p[2] === '1';
+          if (!window.confirm((ativar ? 'Reativar ' : 'Desativar ') + x.nome + '?' + (ativar ? '' : ' Esta pessoa perde o acesso ao app e deixa de receber pedidos.'))) return;
+          salvar({ tipo: p[0], id: x.id, nome: x.nome, telefone: x.telefone, ativo: ativar }, b);
+        };
+      });
+      document.getElementById('fe-cancelar').onclick = function () { form.hidden = true; };
+      form.onsubmit = function (e) {
+        e.preventDefault();
+        alvo.nome = document.getElementById('fe-nome').value; alvo.telefone = document.getElementById('fe-tel').value;
+        salvar(alvo, form.querySelector('button[type=submit]'));
+      };
+    });
+  }
+
   function sair() {
     var s = lerSessao(); gravarSessao(null);
     if (s) api({ acao: 'sair', token: s.token });
@@ -354,7 +424,7 @@
     var s = lerSessao();
     if (!s) return telaLogin('tel');
     var m = /^#pedido=(\d+)$/.exec(location.hash || '');
-    if (s.papel === 'GERENTE') { if (m) painelPedido(s, m[1]); else painelGerente(s); }
+    if (s.papel === 'GERENTE') { if (m) painelPedido(s, m[1]); else if (location.hash === '#equipe') painelEquipe(s); else painelGerente(s); }
     else { if (m) painelPedidoPrest(s, m[1]); else painelPrestador(s); }
   }
   window.addEventListener('hashchange', iniciar);
@@ -363,8 +433,8 @@
   var INTERVALO = 45 * 1000, ultima = Date.now();
   function marcarHora() { rod.textContent = 'ResolvAÍ v' + (window.RESOLVAI_VERSAO || '?') + ' · atualizado às ' + new Date(ultima).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
   function ocupado() {
-    var cx = document.getElementById('caixa-foto'), f = document.getElementById('form-orc'), a = document.activeElement;
-    return (cx && cx.className === 'aberta') || (f && !f.hidden) || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+    var cx = document.getElementById('caixa-foto'), f = document.getElementById('form-orc'), f2 = document.getElementById('form-equipe'), a = document.activeElement;
+    return (cx && cx.className === 'aberta') || (f && !f.hidden) || (f2 && !f2.hidden) || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
   }
   function atualizarSilencioso() {
     if (document.hidden || !lerSessao() || ocupado()) return;

@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.8.0
+- Gestão da equipe: o gerente cadastra, edita, desativa e reativa prestadores e gerentes pelo app (menu Equipe), com boas-vindas no WhatsApp.
+
 ## 0.7.0
 - Atualização automática a cada 45 s com o app aberto (não mexe se você estiver digitando ou com foto aberta), rodapé mostra a hora da última atualização; erro de rede não desloga mais.
 
