@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.8.5
+- Computador: botões de ação da tabela em uma linha, coluna Ações ajustada ao tamanho dos botões.
+
 ## 0.8.4
 - Avisos compactos: nova versão vira faixa fina no topo e instalar vira cartão pequeno no canto.
 

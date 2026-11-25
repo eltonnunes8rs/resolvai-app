@@ -104,3 +104,11 @@ button.sec:disabled{opacity:.5}
 #aviso-instalar .bt{display:flex;align-items:center;gap:14px;margin-top:6px}
 #aviso-instalar button{width:auto;margin:0;padding:7px 18px;border-radius:999px;font-size:14px}
 #aviso-instalar a{font-size:13px}
+
+/* computador: botões da tabela numa linha só, coluna Ações do tamanho dos botões */
+@media (min-width:701px){
+  .tabela td.cel-acoes{white-space:nowrap;width:1%;text-align:right;vertical-align:middle}
+  .tabela td.cel-acoes button.mini{margin:0 0 0 6px;padding:6px 14px;display:inline-block}
+  .tabela td.cel-acoes button.mini:first-child{margin-left:0}
+  .tabela th:last-child{text-align:right}
+}
