@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.8.1
+- Celular: as tabelas do painel viram blocos, com os botões de ação embaixo e lado a lado (sem rolagem lateral).
+
 ## 0.8.0
 - Gestão da equipe: o gerente cadastra, edita, desativa e reativa prestadores e gerentes pelo app (menu Equipe), com boas-vindas no WhatsApp.
 

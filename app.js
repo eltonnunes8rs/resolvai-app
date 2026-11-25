@@ -60,8 +60,13 @@
   }
   function tabela(cols, linhas) {
     if (!linhas || !linhas.length) return '<p class="vazio">Nada por aqui.</p>';
-    return '<div class="tabela"><table><tr>' + cols.map(function (c) { return '<th>' + c[0] + '</th>'; }).join('') + '</tr>' +
-      linhas.map(function (l) { return '<tr>' + cols.map(function (c) { return '<td>' + c[1](l) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table></div>';
+    return '<div class="tabela"><table><tr class="cab">' + cols.map(function (c) { return '<th>' + c[0] + '</th>'; }).join('') + '</tr>' +
+      linhas.map(function (l) {
+        return '<tr>' + cols.map(function (c) {
+          var acoes = c[0] === 'Ações';
+          return '<td' + (acoes ? ' class="cel-acoes"' : ' data-label="' + c[0] + '"') + '>' + c[1](l) + '</td>';
+        }).join('') + '</tr>';
+      }).join('') + '</table></div>';
   }
   function btn(cmd, id, rotulo, cls) {
     return '<button class="mini ' + (cls || '') + '" data-cmd="' + cmd + '" data-id="' + id + '">' + rotulo + '</button>';
