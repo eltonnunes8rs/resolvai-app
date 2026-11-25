@@ -29,3 +29,16 @@ a{color:var(--pri)}
 .bolha small{display:block;color:var(--mut);font-size:11px;margin-bottom:2px}
 .bolha.cli{align-self:flex-start}.bolha.bot{align-self:flex-end;background:var(--bg)}
 td{vertical-align:top}
+
+.grade-fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-bottom:8px}
+.miniatura{aspect-ratio:1;border:1px solid var(--bd);border-radius:10px;background:var(--bg) center/cover no-repeat;cursor:pointer;padding:0;color:var(--mut)}
+.miniatura:not(.ok){animation:pulso 1.2s infinite}
+@keyframes pulso{50%{opacity:.5}}
+#caixa-foto{display:none}
+#caixa-foto.aberta{display:flex;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.88);align-items:center;justify-content:center;flex-direction:column;padding:16px}
+.cx-img{max-width:100%;max-height:80vh;display:flex;align-items:center;justify-content:center}
+.cx-img img{max-width:100%;max-height:80vh;border-radius:8px}
+.cx-leg{color:#ddd;font-size:13px;margin-top:10px}
+#caixa-foto button{position:absolute;background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:999px;width:44px;height:44px;font-size:24px;cursor:pointer}
+.cx-x{top:12px;right:12px}.cx-p{left:12px;top:50%}.cx-n{right:12px;top:50%}
+#caixa-foto .vazio{color:#ddd}
