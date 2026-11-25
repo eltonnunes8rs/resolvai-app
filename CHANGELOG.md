@@ -1,5 +1,8 @@
 # Histórico de versões — ResolvAÍ app
 
+## 0.7.0
+- Atualização automática a cada 45 s com o app aberto (não mexe se você estiver digitando ou com foto aberta), rodapé mostra a hora da última atualização; erro de rede não desloga mais.
+
 ## 0.6.0
 - App do prestador: lista por situação, agenda de 15 dias, detalhe com fotos e mapa, aceitar, recusar (volta ao gerente), enviar orçamento, iniciar e finalizar serviço.
 

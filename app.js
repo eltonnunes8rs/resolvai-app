@@ -3,6 +3,7 @@
   var API = window.RESOLVAI_API;
   var $app = document.getElementById('app');
   var KEY = 'resolvai_sessao';
+  var quieto = false;   // true durante a atualização automática: não mostra "Carregando…"
 
   function lerSessao() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
   function gravarSessao(s) { try { if (s) localStorage.setItem(KEY, JSON.stringify(s)); else localStorage.removeItem(KEY); } catch (e) {} }
@@ -85,10 +86,10 @@
   }
 
   function painelGerente(s) {
-    $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
+    var calado = quieto; if (!calado) $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
     document.getElementById('sair').onclick = sair;
     api({ acao: 'gerente_resumo', token: s.token }).then(function (r) {
-      if (!r.ok) { gravarSessao(null); telaLogin('tel'); return; }
+      if (!r.ok) { if (calado) return; if (r.erro === 'Sessão inválida.') { gravarSessao(null); telaLogin('tel'); return; } $app.innerHTML = topo(s) + '<main><div class="card">' + esc(r.erro || 'Erro.') + '</div></main>'; document.getElementById('sair').onclick = sair; return; }
       var noAprovar = {}; (r.aprovar || []).forEach(function (l) { noAprovar[l.id] = true; });
       var pedidos = (r.pedidos || []).filter(function (l) { return !noAprovar[l.id]; });   // não repete o que já está em "para aprovar"
       var st = r.status || {}, kp = Object.keys(st).map(function (k) { return '<div class="kpi"><b>' + st[k] + '</b><span>' + esc(k) + '</span></div>'; }).join('') || '<p class="vazio">Sem pedidos.</p>';
@@ -174,10 +175,11 @@
   function linkPedido(id) { return '<a href="#pedido=' + id + '">#' + id + '</a>'; }
 
   function painelPedido(s, id) {
-    $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
+    var calado = quieto; if (!calado) $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
     document.getElementById('sair').onclick = sair;
     api({ acao: 'pedido', token: s.token, pedido: String(id) }).then(function (r) {
       if (!r.ok) {
+        if (calado && r.erro !== 'Sessão inválida.') return;
         if (r.erro === 'Sessão inválida.') { gravarSessao(null); telaLogin('tel'); return; }
         $app.innerHTML = topo(s) + '<main><p><a href="#">← Voltar</a></p><div class="card">' + esc(r.erro || 'Erro.') + '</div></main>';
         document.getElementById('sair').onclick = sair; return;
@@ -244,10 +246,11 @@
   function sessaoExpirou(r, s) { if (!r.ok && r.erro === 'Sessão inválida.') { gravarSessao(null); telaLogin('tel'); return true; } return false; }
 
   function painelPrestador(s) {
-    $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
+    var calado = quieto; if (!calado) $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
     document.getElementById('sair').onclick = sair;
     api({ acao: 'prestador_resumo', token: s.token }).then(function (r) {
       if (sessaoExpirou(r, s)) return;
+      if (!r.ok && calado) return;
       if (!r.ok) { $app.innerHTML = topo(s) + '<main><div class="card">' + esc(r.erro || 'Erro.') + '</div></main>'; document.getElementById('sair').onclick = sair; return; }
       var ped = r.pedidos || [], html = '<main>';
       var secs = SECOES.map(function (sc) {
@@ -272,10 +275,11 @@
   }
 
   function painelPedidoPrest(s, id) {
-    $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
+    var calado = quieto; if (!calado) $app.innerHTML = topo(s) + '<main><p class="vazio">Carregando…</p></main>';
     document.getElementById('sair').onclick = sair;
     api({ acao: 'prestador_pedido', token: s.token, pedido: String(id) }).then(function (r) {
       if (sessaoExpirou(r, s)) return;
+      if (!r.ok && calado) return;
       if (!r.ok) { $app.innerHTML = topo(s) + '<main><p><a href="#">← Voltar</a></p><div class="card">' + esc(r.erro || 'Erro.') + '</div></main>'; document.getElementById('sair').onclick = sair; return; }
       var p = r.pedido, ac = p.acoes || [];
       var linhas = [['Serviço', p.servico], ['Cliente', p.cliente], ['Endereço', p.endereco], ['Terreno', p.tamanho], ['O cliente espera', p.expectativa],
@@ -355,5 +359,22 @@
   }
   window.addEventListener('hashchange', iniciar);
   var rod = document.createElement('footer'); rod.className = 'versao'; rod.textContent = 'ResolvAÍ v' + (window.RESOLVAI_VERSAO || '?'); document.body.appendChild(rod);
+  // ---------- Atualização automática ----------
+  var INTERVALO = 45 * 1000, ultima = Date.now();
+  function marcarHora() { rod.textContent = 'ResolvAÍ v' + (window.RESOLVAI_VERSAO || '?') + ' · atualizado às ' + new Date(ultima).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); }
+  function ocupado() {
+    var cx = document.getElementById('caixa-foto'), f = document.getElementById('form-orc'), a = document.activeElement;
+    return (cx && cx.className === 'aberta') || (f && !f.hidden) || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+  }
+  function atualizarSilencioso() {
+    if (document.hidden || !lerSessao() || ocupado()) return;
+    var y = window.scrollY;
+    ultima = Date.now(); marcarHora();
+    quieto = true; iniciar(); quieto = false;
+    var n = 0; (function volta() { window.scrollTo(0, y); if (++n < 8) setTimeout(volta, 150); })();
+  }
+  setInterval(atualizarSilencioso, INTERVALO);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && Date.now() - ultima > 15000) atualizarSilencioso(); });
+  marcarHora();
   iniciar();
 })();
