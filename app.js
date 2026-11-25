@@ -89,6 +89,8 @@
     document.getElementById('sair').onclick = sair;
     api({ acao: 'gerente_resumo', token: s.token }).then(function (r) {
       if (!r.ok) { gravarSessao(null); telaLogin('tel'); return; }
+      var noAprovar = {}; (r.aprovar || []).forEach(function (l) { noAprovar[l.id] = true; });
+      var pedidos = (r.pedidos || []).filter(function (l) { return !noAprovar[l.id]; });   // não repete o que já está em "para aprovar"
       var st = r.status || {}, kp = Object.keys(st).map(function (k) { return '<div class="kpi"><b>' + st[k] + '</b><span>' + esc(k) + '</span></div>'; }).join('') || '<p class="vazio">Sem pedidos.</p>';
       $app.innerHTML = topo(s) + '<main>' +
         '<div class="card"><h2>Pedidos por situação</h2><div class="grid">' + kp + '</div></div>' +
@@ -110,7 +112,7 @@
             if (l.status !== 'CANCELADO' && l.status !== 'CONCLUIDO') a.push(btn('CANCELAR', l.id, 'Cancelar', 'sec'));
             return a.join(' ') || '-';
           }]
-        ], r.pedidos) + '</div>' +
+        ], pedidos) + '</div>' +
         '<div class="card"><h2>Agenda dos próximos 7 dias</h2>' + tabela([
           ['Quando', function (l) { return dh(l.inicio); }], ['Pedido', function (l) { return '#' + l.id; }],
           ['Prestador', function (l) { return esc(l.prestador); }], ['Cliente', function (l) { return esc(l.cliente); }],
